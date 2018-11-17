@@ -2,13 +2,7 @@
 # . Helper Functions for File Handling
 # . Helepr Functions for
 
-# install all needed packages if not installed
-helper.neededPackages = c("parallel", "doParallel", "foreach", "lpSolveAPI", "ggplot2", "plyr")
-helper.updatePackages = function() {
-  needed_packages = helper.neededPackages
-  new_packages = needed_packages[!(needed_packages %in% installed.packages()[,"Package"])]
-  if (length(new_packages) > 0) install.packages(new_packages)
-}
+
 
 # create Folder if not existing
 helper.safeCreateFolder = function (path) {
@@ -47,14 +41,5 @@ helper.requireFile = function (path, error_message = "") {
     stop(paste0(path, " not found ! - Please set working directory. ", error_message))
   }
 }
-
-# if everything works
-helper.updatePackages()
-library("parallel")
-library("doParallel")
-library("foreach")
-library("lpSolveAPI")
-library("ggplot2")
-library("plyr")
 
 helper.included = T

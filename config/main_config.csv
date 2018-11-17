@@ -1,0 +1,7 @@
+parameter;path
+RESULT_VERSION;117
+STAMMDATEN_FILEPATH;2013-Stammdaten_ST-STTriebfahrzeugbaureihen121-komplett.xml
+FAHRLAGEN_FILEPATH;Fahrlagen_14.11.2013_final_v14.csv
+FINVEBTS_FILEPATH;FinVeBTS.csv
+NUMBER_OF_CORES;7
+WOLKEN_FILEPATH;WolkenBST_v02.csv
