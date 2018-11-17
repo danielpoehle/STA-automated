@@ -23,41 +23,45 @@ for(i in 1:length(helper.neededPackages)){
 
 
 # # Init helper methods
-RESULT_VERSION = params$path[params$parameter == "RESULT_VERSION"]
-source(here("Helper.R"))
+RESULT_VERSION = params$value[params$parameter == "RESULT_VERSION"]
+source(here("scripts", "Helper.R"))
 
 # # Configuration Of *relative* paths
-STAMMDATEN_FILEPATH = here("aux", params$path[params$parameter == "STAMMDATEN_FILEPATH"])
-FAHRLAGEN_FILEPATH = here("aux", params$path[params$parameter == "FAHRLAGEN_FILEPATH"])
-FINVEBTS_FILEPATH = here("aux", params$path[params$parameter == "FINVEBTS_FILEPATH"])
+STAMMDATEN_FILEPATH = here("aux", params$value[params$parameter == "STAMMDATEN_FILEPATH"])
+FAHRLAGEN_FILEPATH = here("aux", params$value[params$parameter == "FAHRLAGEN_FILEPATH"])
+FINVEBTS_FILEPATH = here("aux", params$value[params$parameter == "FINVEBTS_FILEPATH"])
 
 
 # # Configuration for parallel computing
 # Note: It is strongly recommended to keep at least one core unccupied, since RStudio and OS
-NUMBER_OF_CORES = as.integer(params$path[params$parameter == "NUMBER_OF_CORES"])
+NUMBER_OF_CORES = as.integer(params$value[params$parameter == "NUMBER_OF_CORES"])
 
 # # # # # # # # # # # # # # #
 # # 1 # Mapping Fahrlagen -> STA
 # # # #
 #
 # # Input:
-# #STA_FOLDER = "../ZugChar_Untersuchungen/STAs_/"
-# WOLKEN_FILEPATH = "./aux/WolkenBST_v02.csv"
-# STA_FOLDER = "./2013_Fahrlagen/ERIKA_STA_181108"
-# STA_MAPPING_FILE = "./2013_Fahrlagen/mapping_STAaltneu.csv"
-# # Output:
-# FAHRLAGEN_STAFIT_FILEPATH = "Fahrlagen_14.11.2013_final_v14_STAFIT.csv"
-# BTS2STA_FILEPATH = "bts2sta.csv"
-# #STAGROUPS_FILEPATH = "STA_GROUPS_tweaked200.csv"
-# STAGROUPS_FILEPATH = "STAGROUPS_v11.csv"
-# STA_RESULT_FOLDER = "STAs/"
-# # Options:
-# DO_OVERLAPPING = F # overlapping currently bugged
-# DO_STAFIT = T
-# DO_MAPPING_STA_BTS = T
-#
-# # Execute:
-# source("newA-V-MitLaufwegen.R")
+#STA_FOLDER = "../ZugChar_Untersuchungen/STAs_/"
+WOLKEN_FILEPATH = here("aux", params$value[params$parameter == "WOLKEN_FILEPATH"])
+STA_ROUTES_FOLDER = here("aux", "ROUTES", params$value[params$parameter == "STA_ROUTES_FOLDER"])
+STA_MAPPING_FILE = here("aux", params$value[params$parameter == "STA_MAPPING_FILE"])
+# Output:
+OUT_FAHRLAGEN_STAFIT_FILEPATH = params$value[params$parameter == "OUT_FAHRLAGEN_STAFIT_FILEPATH"]
+OUT_BTS2STA_FILEPATH = params$value[params$parameter == "OUT_BTS2STA_FILEPATH"]
+STAGROUPS_FILEPATH = params$value[params$parameter == "STAGROUPS_FILEPATH"]
+STA_RESULT_FOLDER = params$value[params$parameter == "STA_RESULT_FOLDER"]
+# Options:
+DO_OVERLAPPING = F # overlapping currently bugged
+DO_STAFIT = params$value[params$parameter == "DO_STAFIT"]
+DO_MAPPING_STA_BTS = params$value[params$parameter == "DO_MAPPING_STA_BTS"]
+
+# Init running time calculations
+source(here("scripts", "a-v-calculations.R"))
+source(here("scripts", "T10kmCalculator.R"))
+
+
+# Execute:
+#source("newA-V-MitLaufwegen.R")
 
 #
 # # # # # # # # # # # # # # #

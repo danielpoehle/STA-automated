@@ -4,8 +4,12 @@
 
 Necessary Scripts:
 1. main.R
-2. Helper.R
-3. bottomUp.R
-4. make2x90.R
+2. Helper scripts
+2.1. Helper.R
+2.2. a-v-calculations.R
+2.3. T10kmCalculator.R 
+3. assignFLG-STA.R
+4. bottomUp.R
+5. make2x90.R
 5. select2x90.R
-6. dailyDistribution.R
+7. dailyDistribution.R
