@@ -18,7 +18,7 @@ helper.safeCreateFolder = function (path) {
 }
 
 # Create result directory if necessary
-RESULT_PATH = paste0("./result_detail_v", RESULT_VERSION, "/")
+RESULT_PATH = here(paste0("result_detail_v", RESULT_VERSION, "/"))
 if (!dir.exists(RESULT_PATH)) {
   dir.create(RESULT_PATH)
 }

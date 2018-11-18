@@ -61,28 +61,21 @@ source(here("scripts", "T10kmCalculator.R"))
 
 
 # Execute:
-#source("newA-V-MitLaufwegen.R")
+source(here("scripts", "assignFLG-STA.R"))
 
-#
+
 # # # # # # # # # # # # # # #
-# # 2 #
+# # 2 # bottomUp
 # # # #
 #
-# # Output:
-# TEMP_TFZ_FRAME_FILEPATH = "TFZ_Frame.csv"
-# # Execute:
-# source("analyzeTFZ+WEIGHT.R")
-#
-# # # # # # # # # # # # # # #
-# # 3 # bottomUp_new_a(v)
-# # # #
-#
-# TFZ_LIST_FOR_A_FRAME_FILEPATH = "TFZ_Frame_aFrame.csv"
-# TFZ_LIST_DTSTA = "dtSTA.csv"
-# BOTTOMUP_RESULT_FOLDER = "all90/"
-# A_FRAME_RESULT_FOLDER = "a_frame/"
-#
-# source("bottomUp_new_a(v).R")
+TEMP_TFZ_FRAME_FILEPATH = here("aux", params$value[params$parameter == "TEMP_TFZ_FRAME_FILEPATH"])
+OUT_TFZ_LIST_FOR_A_FRAME_FILEPATH = params$value[params$parameter == "TFZ_LIST_FOR_A_FRAME_FILEPATH"]
+OUT_TFZ_LIST_DTSTA = params$value[params$parameter == "TFZ_LIST_DTSTA"]
+A_FRAME_RESULT_FOLDER = params$value[params$parameter == "A_FRAME_RESULT_FOLDER"]
+
+# Execute:
+source(here("scripts", "bottomUp.R"))
+
 #
 # # # # # # # # # # # # # # #
 # # 4a # setCoveringOptimizer
