@@ -1,18 +1,18 @@
 #source("./T10kmCalculator.R")
 #source("./a-v-calculations.R")
 
-fullFrame <- read.csv2(file = "~/Dokumente/STA-ZugChar-Generator/result_detail_v117/dtSTA.csv", stringsAsFactors = F)
+fullFrame <- read.csv2(file = helper.getResultPath(OUT_TFZ_LIST_DTSTA), stringsAsFactors = F)
 #fullFrame <- fullFrame[fullFrame$T10WithI <=1000,]
 #dt <- read.csv2(file = "~/Dokumente/STA-ZugChar-Generator/result_detail_v999/TFZ_Frame_for_a_frames.csv", stringsAsFactors = F)
 dt <- (fullFrame[!duplicated(fullFrame[,c("TOTALWEIGHT", "TFZ", "NUM_TFZ")]), ])
 
 #sta90Files <- list.files("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/all90", full.names = T)
-staGroups <- read.csv2(file = "~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STAGROUPS_v11.csv", stringsAsFactors = F)
+staGroups <- read.csv2(file = helper.getResultPath(STAGROUPS_FILEPATH), stringsAsFactors = F)
 staGroups$PARTNER[is.na(staGroups$PARTNER)] <- ""
 #fNames <- list.files("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/all90", full.names = F)
-aFrameFiles <- list.files("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/a_frame", full.names = T)
-tempFrameFiles <- list.files("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STAs", full.names = T)
-zch3x90 <- c("195A", "065")
+#aFrameFiles <- list.files(helper.getResultPath(A_FRAME_RESULT_FOLDER), full.names = T)
+#tempFrameFiles <- list.files(helper.getResultPath(STA_RESULT_FOLDER), full.names = T)
+helper.safeCreateFolder(helper.getResultPath(OUT_2x90_FOLDER))
 
 cl <- makeCluster(NUMBER_OF_CORES)
 registerDoParallel(cl)
@@ -35,12 +35,12 @@ find2x90 <- function(tempFrame, aFrame, find3x90 = F){
     first <- fullFrame[fullFrame$TFZ == dt$TFZ[idx[j]] & fullFrame$TOTALWEIGHT == dt$TOTALWEIGHT[idx[j]] &
                          fullFrame$VMAX >= 40 & fullFrame$I == staGroups$i[i],]
     maxT <- 1800
-    if(find3x90){ maxT <- 1000}
+    #if(find3x90){ maxT <- 1800}
     if(all(first$T10WithI > min(t10, maxT))){ next() }
     idx1 <- c(idx1, idx[j])
   }
   if(length(idx1) < 1){
-    write.csv2(resultFrame, file = paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v283/", staGroups$ID[i], ".csv"), row.names = F)
+    write.csv2(resultFrame, file = paste0(helper.getResultPath(OUT_2x90_FOLDER), "/", staGroups$ID[i], ".csv"), row.names = F)
     next()
   }
 
@@ -56,7 +56,7 @@ find2x90 <- function(tempFrame, aFrame, find3x90 = F){
     idx2 <- c(idx2, idx[j])
   }
   if(length(idx2) < 1){
-    write.csv2(resultFrame, file = paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v283/", staGroups$ID[i], ".csv"), row.names = F)
+    write.csv2(resultFrame, file = paste0(helper.getResultPath(OUT_2x90_FOLDER), "/", staGroups$ID[i], ".csv"), row.names = F)
     next()
   }
 
@@ -150,123 +150,34 @@ find2x90 <- function(tempFrame, aFrame, find3x90 = F){
   return(resultFrame)
 }
 
+helper.log("start find2x90")
 #foreach(i = c(3,7,10,13,14,31,32,86,87,102,104,106,111,56,118,143,148,149,154,99,40,100,38,47,116,77,54,19,81)) %dopar% {
-#foreach(i = 1:length(staGroups$ID)) %dopar% {
+foreach(i = 1:length(staGroups$ID)) %dopar% {
 #for(i in 1:length(staGroups$ID)){
-for(i in c(65,90,91)){
+#for(i in c(65,90,91)){
   print(i)
-  tempFrame <- read.csv2(file = paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STAs/STA_", staGroups$ID[i], ".csv"), stringsAsFactors = F)
+  tempFrame <- read.csv2(file = paste0(helper.getResultPath(STA_RESULT_FOLDER), "/STA_", staGroups$ID[i], ".csv"), stringsAsFactors = F)
   if(staGroups$PARTNER[i] != ""){
-    fi <- paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STAs/STA_",
+    fi <- paste0(helper.getResultPath(STA_RESULT_FOLDER), "/STA_",
                  staGroups$ID[staGroups$PARTNER == staGroups$PARTNER[i] & staGroups$ID != staGroups$ID[i]], ".csv")
     for(f in fi){
       tempFrame <- rbind(tempFrame, read.csv2(file = f, stringsAsFactors = F))
     }
   }
-  aFrame <- read.csv2(paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/a_frame/", staGroups$ID[i], ".csv"), stringsAsFactors = F)[,-1]
+  aFrame <- read.csv2(paste0(helper.getResultPath(A_FRAME_RESULT_FOLDER), "/", staGroups$ID[i], ".csv"), stringsAsFactors = F)[,-1]
   if(length(tempFrame$X) != ncol(aFrame)){ stop("aFrame not suitable to tempFrame") }
   if(nrow(dt) != nrow(aFrame)){ stop("aFrame not suitable to dt") }
 
   resultFrame <- find2x90(tempFrame, aFrame, find3x90 = staGroups$ID[i] %in% zch3x90)
 
-  write.csv2(resultFrame, file = paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v283/", staGroups$ID[i], ".csv"), row.names = F)
+  write.csv2(resultFrame, file = paste0(helper.getResultPath(OUT_2x90_FOLDER), "/", staGroups$ID[i], ".csv"), row.names = F)
 }
 
 stopCluster(cl)
+helper.log("finished find2x90")
 #write.csv2(resultFrame, file = "./result_detail_v280/101.csv", row.names = F)
 #summary(resultFrame$WEIGHTED_T10WITHI)
 
 
 ######################### STOP #########################
 
-## update T10km weighted for STA-ZugChar-Generator files
-twoX90Files <- list.files("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STA-ZugChar-Generator", full.names = T)
-i1 <- -1
-i2 <- -1
-t10 <- -10
-
-for(i in 1:length(twoX90Files)){
-  print(twoX90Files[i])
-  mtry <- try(read.csv2(file = twoX90Files[i], stringsAsFactors = F), silent = TRUE)
-  if (class(mtry) == "try-error") { next() }
-  tempFrame <- read.csv2(twoX90Files[i], stringsAsFactors = F)
-  #for(j in 1:6){
-  for(j in 1:length(tempFrame$INDEX_DT_1)){
-    if(i1 == tempFrame$INDEX_DT_1[j] && i2 == tempFrame$INDEX_DT_2[j]){
-      tempFrame[j,"WEIGHTED_T10WITHI"] <- round(t10, 1)
-    }else{
-      i1 <- tempFrame$INDEX_DT_1[j]
-      i2 <- tempFrame$INDEX_DT_2[j]
-      t10 <- 1.0 * (tempFrame$ANZ1[j] * fullFrame$T10WithI[i1] + tempFrame$ANZ2[j] * fullFrame$T10WithI[i2]) / (tempFrame$ANZ1[j] + tempFrame$ANZ2[j])
-      tempFrame[j,"WEIGHTED_T10WITHI"] <- round(t10, 1)
-    }
-  }
-  print(paste0("min for i=", i, ": ", min(tempFrame$WEIGHTED_T10WITHI), " sec"))
-  write.csv2(tempFrame, file = twoX90Files[i], row.names = F)
-}
-
-## update T10km weighted for all90 files
-sta90Files <- list.files("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/all90", full.names = T)
-
-for(i in 1:length(sta90Files)){
-  print(sta90Files[i])
-  mtry <- try(read.csv2(file = sta90Files[i], stringsAsFactors = F), silent = TRUE)
-  if (class(mtry) == "try-error") { next() }
-  tempFrame <- read.csv2(sta90Files[i], stringsAsFactors = F)
-  #for(j in 1:6){
-  for(j in 1:length(tempFrame$a)){
-    #print(j)
-    v <- tempFrame$v[j]
-    ind <- which(fullFrame$TFZ == tempFrame$TFZ[j] & fullFrame$NUM_TFZ == tempFrame$NUM_TFZ[j] &
-                   fullFrame$TOTALWEIGHT == tempFrame$TOTALWEIGHT[j] &
-                   fullFrame$BREAKCLASS == tempFrame$BREAKCLASS[j] & fullFrame$VMAX == v)
-    while(length(ind) < 1){
-      v <- v - 10
-      ind <- which(fullFrame$TFZ == tempFrame$TFZ[j] & fullFrame$NUM_TFZ == tempFrame$NUM_TFZ[j] &
-                     fullFrame$TOTALWEIGHT == tempFrame$TOTALWEIGHT[j] &
-                     fullFrame$BREAKCLASS == tempFrame$BREAKCLASS[j] & fullFrame$VMAX == v)
-      if(v < 0){ v <- 110}
-    }
-    tempFrame[j, "T10"] <- round(fullFrame$T10WithI[ind], 4)
-  }
-  print(paste0("min for i=", i, ": ", min(tempFrame$T10), " sec"))
-  write.csv2(tempFrame, file = sta90Files[i], row.names = F)
-}
-
-
-########## make STA-ZugChar-Generator files readable #################
-
-files <- list.files(path = "~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STA-ZugChar-Generator", full.names = T)
-fName <- list.files(path = "~/Dokumente/STA-ZugChar-Generator/result_detail_v117/STA-ZugChar-Generator", full.names = F)
-for(i in 1:length(files)){
-  print(files[i])
-  tmp <- read.csv2(files[i], stringsAsFactors = F)
-  tmp$Z1 <- ""
-  tmp$Z2 <- ""
-  for(j in 1:length(tmp$INDEX_DT_1)){
-    ind <- tmp$INDEX_DT_1[j]
-    tmp[j, "Z1"] <- paste(fullFrame$TFZ[ind], fullFrame$TOTALWEIGHT[ind], fullFrame$VMAX[ind], fullFrame$BREAKCLASS[ind], sep = "#")
-    ind <- tmp$INDEX_DT_2[j]
-    tmp[j, "Z2"] <- paste(fullFrame$TFZ[ind], fullFrame$TOTALWEIGHT[ind], fullFrame$VMAX[ind], fullFrame$BREAKCLASS[ind], sep = "#")
-  }
-  write.csv2(tmp, file = paste0("~/Dokumente/STA-ZugChar-Generator/result_detail_v117/filled_STA-ZugChar-Generator/", fName[i]), row.names = F)
-}
-
-########## print a-v diagrams ###################
-
-elem <- tfzNames[tfzNames$name == "185-2", ]
-avModel <- getAVModel(elem$i, elem$j, 1300, 1, addTfzMass = T)
-avModel2 <- avModel
-reduce <- getReduction(avModel$a[1], avModel$a[91])
-avModel2$a <- avModel2$a - (seq(0.1,1,0.009)* reduce)[1:91]
-avModel2$tfz <- "tolerance"
-avModel <- rbind(avModel, avModel2)
-elem <- tfzNames[tfzNames$name == "294-3", ]
-avModel <- rbind(avModel, getAVModel(elem$i, elem$j, 950, 1, addTfzMass = T))
-elem <- tfzNames[tfzNames$name == "140-1", ]
-avModel <- rbind(avModel, getAVModel(elem$i, elem$j, 2000, 1, addTfzMass = T))
-qplot(avModel$v, avModel$a, color = avModel$tfz)
-qplot(avModel$s, -avModel$t_kum, color = avModel$tfz)
-
-
-calculate10kmWithI(avModel, 100, "P", 20)

@@ -1,8 +1,7 @@
 # result_detail_folders
 result_detail*
 
-#aux folder with data and files
-/aux/*
+aux/ROUTES/
 
 # History files
 .Rhistory

@@ -76,38 +76,36 @@ A_FRAME_RESULT_FOLDER = params$value[params$parameter == "A_FRAME_RESULT_FOLDER"
 # Execute:
 source(here("scripts", "bottomUp.R"))
 
-#
 # # # # # # # # # # # # # # #
-# # 4a # setCoveringOptimizer
-# # # ##
-#
-# BOTTOMUP_REDUCED_RESULT_FOLDER = "all90/reduced/"
-# COVERING_RESULT_FOLDER = "bottomup/merge_av/"
-# SELECTION_RESULT_FOLDER = "SelectedFiles_Opti_v01.csv"
-#
-# source("setCoveringOptimizer.R")
-#
-# # # # # # # # # # # # # # #
-# # 4b # Combining two 90% Characteristics
-# # # ##
-#
-# # coming soon
-#
-# # # # # # # # # # # # # # #
-# # 5 # GainMaximizer.R
-# # # #
-# OPTIMIZATION_RESULT_FOLDER = "optimized"
-# source("GainMaximizer.R")
-#
-# # # # # # # # # # # # # # #
-# # 6 # SystemtrassenAssigner.R
+# # 3 # make2x90
 # # # #
 #
-# source("SystemtrassenAssigner.R")
-#
+zch3x90 <- read.csv2(here("config", "3x90.csv"), stringsAsFactors = F)$STA
+OUT_2x90_FOLDER = params$value[params$parameter == "OUT_2x90_FOLDER"]
+
+# Execute:
+source(here("scripts", "make2x90.R"))
+
 # # # # # # # # # # # # # # #
-# # 7 # Tagesgang.R
+# # 4 # select2x90
 # # # #
 #
-# CHOSEN_REM = "13" # String!
+OUT_MAN_AFRAME_FOLDER = params$value[params$parameter == "OUT_MAN_AFRAME_FOLDER"]
+OUT_PAIRFRAME_FOLDER = params$value[params$parameter == "OUT_PAIRFRAME_FOLDER"]
+OUT_GAINFRAME_FOLDER = params$value[params$parameter == "OUT_GAINFRAME_FOLDER"]
+OUT_COMP_OPTI = params$value[params$parameter == "OUT_COMP_OPTI"]
+OUT_GAIN_OPTI = params$value[params$parameter == "OUT_GAIN_OPTI"]
+OUT_PRE_OPTI = params$value[params$parameter == "OUT_PRE_OPTI"]
+OUT_ALL2x90 = params$value[params$parameter == "OUT_ALL2x90"]
+OUT_POST_OPTI = params$value[params$parameter == "OUT_POST_OPTI"]
+OPT_FOLDER = params$value[params$parameter == "OPT_FOLDER"]
+TMP_OPT_FOLDER = params$value[params$parameter == "TMP_OPT_FOLDER"]
+
+# Execute:
+source(here("scripts", "select2x90.R"))
+
+# # # # # # # # # # # # # # #
+# # 5 # Tagesgang.R
+# # # #
+#
 # source("Tagesgang.R")
