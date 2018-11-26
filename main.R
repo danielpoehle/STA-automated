@@ -108,4 +108,4 @@ source(here("scripts", "select2x90.R"))
 # # 5 # Tagesgang.R
 # # # #
 #
-# source("Tagesgang.R")
+source(here("scripts", "dailyDistribution.R"))
