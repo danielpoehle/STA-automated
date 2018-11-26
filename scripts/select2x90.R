@@ -186,7 +186,8 @@ foreach(i = 1:length(staGroups$ID)) %dopar% {
       avg <- median(c(1.0 * f1$T10WithI / tempFrame$T10withI7[res1 == 1], 1.0 * f2$T10WithI / tempFrame$T10withI7[y == 1], z[z==1]))
 
       # gain>0 is good, gain <0 is bad
-      if((3.0-avg) < 1.2){
+      if((3.0-avg) < 1.0){
+        #print(paste(j, avg))
         pairFrame[j] <- 0
       }else{
         totalgain[j] <- round(3.0 - avg, 3)
@@ -235,39 +236,66 @@ if(any((resultFrame[, -1] == 0)*gainFrame[,-1] != 0)){stop("resultFrame = 0 but 
 
 
 helper.log("start heuristic assignment of pairs to STA")
-currentGainFrame <- gainFrame[,-1]
-notCovered <- integer(nrow(currentGainFrame)) + 1
-# calculate avg gain of all columns
-sumplus <- 1.0 * colSums(currentGainFrame*(currentGainFrame > 0)) / colSums(currentGainFrame>0)
-
+beginOpt <- T
 selectedList <- integer(0)
-cover <- matrix(0, length(staGroups$ID), 30)
-for(i in 1:30){
-  #print(paste(i, "not covered", sum(notCovered)))
-  if(sum(notCovered) <1){
-    print("finished")
-    break()}
-  candidate <- which.max(sumplus)
-  if(sumplus[candidate] <= 0){
-    print("less than 0")
-    break()
+maxI <- 29
+
+while (beginOpt){
+  currentGainFrame <- gainFrame[,-1]
+  notCovered <- integer(nrow(currentGainFrame)) + 1
+  # calculate avg gain of all columns
+  sumplus <- 1.0 * colSums(currentGainFrame*(currentGainFrame > 0)) / colSums(currentGainFrame>0)
+
+  selectedList <- integer(0)
+  cover <- matrix(0, length(staGroups$ID), 30)
+  for(i in 1:30){
+    #print(paste(i, "not covered", sum(notCovered)))
+    if(sum(notCovered) <1){
+      print("finished")
+      break()}
+    candidate <- which.max(sumplus)
+    if(sumplus[candidate] <= 0){
+      print("gain less than 0")
+      for(j in 1:ncol(currentGainFrame)){
+        if(all(resultFrame[,j+1] >= notCovered)){
+          selectedList <- c(selectedList, j)
+          co <- as.integer(resultFrame[,j+1] > 0)
+          cover[,i] <- co
+          notCovered <- notCovered - co
+          notCovered[notCovered < 0] <- 0
+          break()
+        }
+      }
+      if(sum(notCovered) < 1){
+        stop(paste("not all STA could be covered", resultFrame$STA[notCovered == 1]))
+      }
+      break()
     }
-  selectedList <- c(selectedList, candidate)
-  co <- as.integer(currentGainFrame[,candidate] > 0)
-  cover[,i] <- co
-  notCovered <- notCovered - co
-  notCovered[notCovered < 0] <- 0
-  currentGainFrame[which(co == 1),] <- integer(ncol(currentGainFrame))
-  ctr <- colSums(currentGainFrame>0)
-  ctr[ctr < 1] <- 1
-  if(i < 22){
-    sumplus <- 1.0 * colSums(currentGainFrame*(currentGainFrame > 0)) / ctr
-  }else{
-    sumplus <- 1.0 * colSums(currentGainFrame*(currentGainFrame > 0)) #/ ctr
+    selectedList <- c(selectedList, candidate)
+    co <- as.integer(currentGainFrame[,candidate] > 0)
+    cover[,i] <- co
+    notCovered <- notCovered - co
+    notCovered[notCovered < 0] <- 0
+    currentGainFrame[which(co == 1),] <- integer(ncol(currentGainFrame))
+    ctr <- colSums(currentGainFrame>0)
+    ctr[ctr < 1] <- 1
+    if(i < maxI){
+      sumplus <- 1.0 * colSums(currentGainFrame*(currentGainFrame > 0)) / ctr
+    }else{
+      sumplus <- 1.0 * colSums(currentGainFrame*(currentGainFrame > 0)) #/ ctr
+    }
+    sumplus[sumplus <= 0] <- 0
+    if(sum(is.nan(sumplus)) > 0){ stop("nan introduced")}
   }
-  sumplus[sumplus <= 0] <- 0
-  if(sum(is.nan(sumplus)) > 0){ stop("nan introduced")}
+  if(sum(notCovered) < 1){
+    beginOpt <- F
+  }else{
+    helper.log(paste("reduce opti:", maxI))
+    maxI <- maxI - 1
+  }
 }
+
+
 
 #selectedList <- c(selectedList, 387)
 
@@ -299,7 +327,7 @@ write.csv2(beginSelected, file = helper.getResultPath(OUT_PRE_OPTI), row.names =
 write.csv2(all2x90, file = helper.getResultPath(OUT_ALL2x90), row.names = F)
 helper.log("finished heuristic assignment of pairs to STA")
 
-safeSelected <- beginSelected
+#safeSelected <- beginSelected
 #beginSelected <- safeSelected
 
 ####### optimize selection here #######
@@ -370,7 +398,7 @@ foreach(n = 1:NUMBER_OF_CORES) %dopar% {
       currentSelected[[n]] <- currentSelected[[n]][-switchInd]
       currentSelected[[n]] <- c(currentSelected[[n]], first[i], second[i])
       currentGainValue[[n]] <- gain
-      nm <- paste0("OP_", currentGainValue[[n]], "_", n, "_currentSelected")
+      nm <- paste0("OP_", format(round(currentGainValue[[n]], 3), nsmall = 3) , "_", n, "#", i, "_currentSelected")
       write.csv2(currentSelected[[n]], file = paste0(helper.getResultPath(TMP_OPT_FOLDER), "/", nm, ".csv"))
     }else{
       print(paste("i:", i, "      no gain increase:", currentGainValue[[n]], "<--", gain))
@@ -393,7 +421,7 @@ beginSelected <- data.frame(STA = resultFrame$STA,
 beginSelected$SEL[12] <- "11408#7509"
 
 if(any(beginSelected$SEL == "no")){stop("at least one STA not covered!")}
-helper.log("finished optimization")
+helper.log("finished optimization and start finding 3rd ZCH")
 ###### finish optimization #######
 
 ######## get third ZCH ############
@@ -441,14 +469,34 @@ for(i in 1:length(zch3x90)){
       availableTrains <- c(availableTrains, optimizedSelected[j])
     }
   }
-  if(length(availableTrains) < 1){stop("no third ZCH available!")}
+  if(length(availableTrains) < 1){
+    print(paste(zch3x90[i], "--> no third ZCH in optimizedSelected available!"))
+    an <- as.integer(1.0* length(fullFrame$I) / length(unique(fullFrame$I)))
+    for(j in 1:an){
+      #print(j)
+      f3 <- fullFrame[j,]
+      a3 <- aFrame[which(dt$TFZ == f3$TFZ & dt$TOTALWEIGHT == f3$TOTALWEIGHT & dt$NUM_TFZ == f3$NUM_TFZ),][1,]
+      v3 <- tempFrame$VMAX >= f3$VMAX
+      res3 <- integer(0)
+      if(f3$BREAKCLASS != "G"){
+        res3 <- as.numeric(a3 * v3 * as.integer(tempFrame$BREAKCLASS != "G"))
+      }else{
+        res3 <- as.numeric(a3 * v3)
+      }
+      if(sum(res1 | res2 | res3) >= 0.9*ncol(aFrame)){
+        availableTrains <- c(availableTrains, j)
+      }
+    }
+    if(length(availableTrains) < 1){stop(paste(zch3x90[i], "no third ZCH in fullFrame available!"))}
+    }
   id <- availableTrains[which.min(fullFrame[availableTrains,"T10WithI"])]
   beginSelected$SEL[iRow] <- paste(beginSelected$SEL[iRow], id, sep = "#")
 }
 
+
 calcT10SYS <- F
 helper.safeCreateFolder(helper.getResultPath(OPT_FOLDER))
-helper.log("generate optimized_selected")
+helper.log("finished finding 3rd ZCH and start generate optimized_selected")
 for(i in 1:length(staGroups$ID)){
   #timestamp()
   #print(paste0(i, ": STA_",staGroups$ID[i]))
