@@ -47,6 +47,7 @@ for(i in 1:length(files)){
   tmp$STA <- unlist(strsplit(fNames[i], "\\."))[1]
   tmp$i <- staGroups$i[staGroups$ID == tmp$STA[1]]
   anz <- min(30, length(tmp$INDEX_DT_1))
+  #anz <- min(1, length(tmp$INDEX_DT_1))
   idx <- which(tmp$WEIGHTED_T10WITHI <= sort(tmp$WEIGHTED_T10WITHI)[anz])
   idx <- idx[1:anz]
   two90s <- rbind(two90s, tmp[idx,])
@@ -319,7 +320,7 @@ beginSelected <- data.frame(STA = resultFrame$STA,
                             SEL = getBestSelected(resultFrame, gainFrame, selectedList, all2x90)[[1]],
                             stringsAsFactors = F)
 
-beginSelected$SEL[12] <- "11408#7509"
+beginSelected$SEL[13] <- "11408#7509"
 
 if(any(beginSelected$SEL == "no")){stop("at least one STA not covered!")}
 
@@ -418,23 +419,28 @@ beginSelected <- data.frame(STA = resultFrame$STA,
                             SEL = getBestSelected(resultFrame, gainFrame, optimizedSelected, all2x90)[[1]],
                             stringsAsFactors = F)
 
-beginSelected$SEL[12] <- "11408#7509"
+idealSelected <- data.frame(STA = resultFrame$STA,
+                            SEL = getBestSelected(resultFrame, gainFrame, 1:length(all2x90), all2x90)[[1]],
+                            stringsAsFactors = F)
+
+beginSelected$SEL[13] <- "11408#7509"
+idealSelected$SEL[13] <- "11408#7509"
 
 if(any(beginSelected$SEL == "no")){stop("at least one STA not covered!")}
+if(any(idealSelected$SEL == "no")){stop("at least one STA not covered!")}
 helper.log("finished optimization and start finding 3rd ZCH")
 ###### finish optimization #######
 
 ######## get third ZCH ############
 
-
-for(i in 1:length(zch3x90)){
-  iRow <- which(beginSelected$STA == zch3x90[i])
-  zch_id <- as.integer(unlist(strsplit(beginSelected$SEL[iRow], "#")))
+getThirdZCH <- function(iRow, Ex90, selected){
+  zch_id <- as.integer(unlist(strsplit(selected$SEL[iRow], "#")))
   f1 <- fullFrame[zch_id[1],]
   f2 <- fullFrame[zch_id[2],]
 
 
-  aFrame <- read.csv2(paste0(helper.getResultPath(A_FRAME_RESULT_FOLDER), "/", zch3x90[i], ".csv"), stringsAsFactors = F)[,-1]
+  tempFrame <- read.csv2(file = paste0(helper.getResultPath(STA_RESULT_FOLDER), "/STA_", Ex90, ".csv"), stringsAsFactors = F)
+  aFrame <- read.csv2(paste0(helper.getResultPath(A_FRAME_RESULT_FOLDER), "/", Ex90, ".csv"), stringsAsFactors = F)[,-1]
   a1 <- aFrame[which(dt$TFZ == f1$TFZ & dt$TOTALWEIGHT == f1$TOTALWEIGHT & dt$NUM_TFZ == f1$NUM_TFZ),][1,]
   a2 <- aFrame[which(dt$TFZ == f2$TFZ & dt$TOTALWEIGHT == f2$TOTALWEIGHT & dt$NUM_TFZ == f2$NUM_TFZ),][1,]
 
@@ -457,6 +463,12 @@ for(i in 1:length(zch3x90)){
   availableTrains <- integer(0)
   for(j in 1:length(optimizedSelected)){
     f3 <- fullFrame[optimizedSelected[j],]
+    t10I <- fullFrame[fullFrame$TFZ == f3$TFZ & fullFrame$TOTALWEIGHT == f3$TOTALWEIGHT &
+                        fullFrame$NUM_TFZ == f3$NUM_TFZ & fullFrame$I == staGroups$i[staGroups$ID == Ex90],]
+    if(min(t10I$T10WithI) > 1800){
+      #print(optimizedSelected[j])
+      next()
+    }
     a3 <- aFrame[which(dt$TFZ == f3$TFZ & dt$TOTALWEIGHT == f3$TOTALWEIGHT & dt$NUM_TFZ == f3$NUM_TFZ),][1,]
     v3 <- tempFrame$VMAX >= f3$VMAX
     res3 <- integer(0)
@@ -470,11 +482,14 @@ for(i in 1:length(zch3x90)){
     }
   }
   if(length(availableTrains) < 1){
-    print(paste(zch3x90[i], "--> no third ZCH in optimizedSelected available!"))
+    print(paste(Ex90, "--> no third ZCH in optimizedSelected available!"))
     an <- as.integer(1.0* length(fullFrame$I) / length(unique(fullFrame$I)))
     for(j in 1:an){
       #print(j)
       f3 <- fullFrame[j,]
+      # t10I <- fullFrame[fullFrame$TFZ == f3$TFZ & fullFrame$TOTALWEIGHT == f3$TOTALWEIGHT &
+      #                     fullFrame$NUM_TFZ == f3$NUM_TFZ & fullFrame$I == staGroups$i[staGroups$ID == Ex90],]
+      # if(min(t10I$T10WithI) > 1800){next()}
       a3 <- aFrame[which(dt$TFZ == f3$TFZ & dt$TOTALWEIGHT == f3$TOTALWEIGHT & dt$NUM_TFZ == f3$NUM_TFZ),][1,]
       v3 <- tempFrame$VMAX >= f3$VMAX
       res3 <- integer(0)
@@ -487,10 +502,25 @@ for(i in 1:length(zch3x90)){
         availableTrains <- c(availableTrains, j)
       }
     }
-    if(length(availableTrains) < 1){stop(paste(zch3x90[i], "no third ZCH in fullFrame available!"))}
-    }
+    if(length(availableTrains) < 1){stop(paste(Ex90, "no third ZCH in fullFrame available!"))}
+  }
   id <- availableTrains[which.min(fullFrame[availableTrains,"T10WithI"])]
+  return(id)
+}
+
+
+for(i in 1:length(zch3x90)){
+  iRow <- which(beginSelected$STA == zch3x90[i])
+  id <- getThirdZCH(iRow, zch3x90[i], beginSelected)
+  print(paste("optimizedSelected: third ZCH with T10 =", min(fullFrame[fullFrame$TFZ == fullFrame$TFZ[id] & fullFrame$TOTALWEIGHT == fullFrame$TOTALWEIGHT[id] &
+                                                fullFrame$NUM_TFZ == fullFrame$NUM_TFZ[id] &
+                                                fullFrame$I == staGroups$i[staGroups$ID == zch3x90[i]],]$T10WithI)))
   beginSelected$SEL[iRow] <- paste(beginSelected$SEL[iRow], id, sep = "#")
+  id <- getThirdZCH(iRow, zch3x90[i], idealSelected)
+  print(paste("idealSelected: third ZCH with T10 =", min(fullFrame[fullFrame$TFZ == fullFrame$TFZ[id] & fullFrame$TOTALWEIGHT == fullFrame$TOTALWEIGHT[id] &
+                                                                         fullFrame$NUM_TFZ == fullFrame$NUM_TFZ[id] &
+                                                                         fullFrame$I == staGroups$i[staGroups$ID == zch3x90[i]],]$T10WithI)))
+  idealSelected$SEL[iRow] <- paste(idealSelected$SEL[iRow], id, sep = "#")
 }
 
 

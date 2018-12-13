@@ -146,6 +146,9 @@ for(i in 1:length(staFiles)){
     resultFrame$TIMESLOT120 <- cut(resultFrame$TIME, seq(0,172800, 7200), right=F)
     levels(resultFrame$TIMESLOT120) <- paste0(c(as.character(seq(0,48,2))), ":00")
 
+    resultFrame$TIMESLOT240 <- cut(resultFrame$TIME, seq(0,172800, 14400), right=F)
+    levels(resultFrame$TIMESLOT240) <- paste0(c(as.character(seq(0,48,4))), ":00")
+
     resultFrame$DIRECTION <- factor(resultFrame$DIRECTION, levels = as.character(unique(resultFrame$DIRECTION)))
     resultFrame$SYS <- factor(resultFrame$SYS, levels = as.character(unique(resultFrame$SYS)))
 
@@ -176,6 +179,7 @@ for(i in 1:length(staFiles)){
     #lBTS <- staBTS[length(staBTS)]
     helper.safeCreateFolder(paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables60/"))
     helper.safeCreateFolder(paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables120/"))
+    helper.safeCreateFolder(paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables240/"))
 
     lv <- unique(levels(resultFrame$DIRECTION))
 
@@ -198,27 +202,44 @@ for(i in 1:length(staFiles)){
                      resultFrame$SYS[resultFrame$DIRECTION == lv[2]]),
                file = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables120/", "STA_", staNames[i], "_NEWSTA_", lv[2], ".csv"),
                row.names = T)
+
+    write.csv2(table(resultFrame$TIMESLOT240[resultFrame$DIRECTION == lv[1]],
+                     resultFrame$SYS[resultFrame$DIRECTION == lv[1]]),
+               file = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables240/", "STA_", staNames[i], "_NEWSTA_", lv[1], ".csv"),
+               row.names = T)
+
+    write.csv2(table(resultFrame$TIMESLOT240[resultFrame$DIRECTION == lv[2]],
+                     resultFrame$SYS[resultFrame$DIRECTION == lv[2]]),
+               file = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables240/", "STA_", staNames[i], "_NEWSTA_", lv[2], ".csv"),
+               row.names = T)
 }
 
-staFiles <- list.files(path = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables120/"), full.names = T, pattern = ".csv$")
-staNames <- gsub(".csv", "", list.files(path = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/tables120/"), full.names = F, pattern = ".csv$"))
 
+
+helper.safeCreateFolder(paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/FILLTABLE60/"))
 helper.safeCreateFolder(paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/FILLTABLE120/"))
+helper.safeCreateFolder(paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/FILLTABLE240/"))
 
-weightSTA <- integer(length(staFiles))
-for(i in 1:length(staFiles)){
-  tempFrame <- read.csv2(file = staFiles[i], stringsAsFactors = F)[,-1]
-  #get the total number of systemtrassen for weight of STA
-  if(is.null(dim(tempFrame))){
-    weightSTA[i] <- quantile(tempFrame, 0.75)+2
-  }else{
-    weightSTA[i] <- quantile(apply(tempFrame, 1, sum), 0.75)+2
+for(e in 1:3){
+  nm <- c("FILLTABLE60/", "FILLTABLE120/", "FILLTABLE240/")
+  tb <- c("tables60/", "tables120/", "tables240/")
+  staFiles <- list.files(path = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/", tb[e]), full.names = T, pattern = ".csv$")
+  staNames <- gsub(".csv", "", list.files(path = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/", tb[e]), full.names = F, pattern = ".csv$"))
+
+  weightSTA <- integer(length(staFiles))
+  for(i in 1:length(staFiles)){
+    tempFrame <- read.csv2(file = staFiles[i], stringsAsFactors = F)[,-1]
+    #get the total number of systemtrassen for weight of STA
+    if(is.null(dim(tempFrame))){
+      weightSTA[i] <- quantile(tempFrame, 0.75)+e
+    }else{
+      weightSTA[i] <- quantile(apply(tempFrame, 1, sum), 0.75)+e
+    }
+
   }
 
-}
 
-
-for(i in 1:length(staFiles)){
+  for(i in 1:length(staFiles)){
     #print(staNames[i])
     tempFrame <- read.csv2(file = staFiles[i], stringsAsFactors = F)
     sysTrains <- colnames(tempFrame)[-1]
@@ -226,8 +247,8 @@ for(i in 1:length(staFiles)){
     totalTrains <- weightSTA[i]
     remainingTrains <- rep(totalTrains, length(tempFrame$X))
     if(length(sysTrains) == 3){
-        #split number of trains per hour to different systemtrassen
-        remainingTrains <- remainingTrains - tempFrame[,4]
+      #split number of trains per hour to different systemtrassen
+      remainingTrains <- remainingTrains - tempFrame[,4]
     }
     f <- 2
     firstCharacteristic <- remainingTrains
@@ -258,8 +279,11 @@ for(i in 1:length(staFiles)){
       resultFrame[,s] <- secondCharacteristic
     }
 
-    write.csv2(resultFrame, file = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/FILLTABLE120/", staNames[i],".csv"), row.names = F)
+    write.csv2(resultFrame, file = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/", nm[e], staNames[i],".csv"), row.names = F)
+  }
 }
+
+
 
 
 ############################## end file ########################################

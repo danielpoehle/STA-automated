@@ -155,7 +155,7 @@ helper.log("start find2x90")
 foreach(i = 1:length(staGroups$ID)) %dopar% {
 #for(i in 1:length(staGroups$ID)){
 #for(i in c(65,90,91)){
-  print(i)
+  print(staGroups$ID[i])
   tempFrame <- read.csv2(file = paste0(helper.getResultPath(STA_RESULT_FOLDER), "/STA_", staGroups$ID[i], ".csv"), stringsAsFactors = F)
   if(staGroups$PARTNER[i] != ""){
     fi <- paste0(helper.getResultPath(STA_RESULT_FOLDER), "/STA_",

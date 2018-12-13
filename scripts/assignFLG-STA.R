@@ -10,7 +10,7 @@
 if (DO_MAPPING_STA_BTS) { # Checking Block if Mapping enabled
 
 files <- list.files(STA_ROUTES_FOLDER, full.names = T, pattern = ".csv$")
-allSta <- unlist(lapply(strsplit(files, "_"), function(x){x[4]}))
+allSta <- unlist(lapply(strsplit(files, "_"), function(x){x[5]}))
 staNumber <- sort(unique(allSta))
 
 
