@@ -152,7 +152,13 @@ for(i in 1:length(staNumber)){
             trainPath <- unlist(strsplit(data$WAY[ind[j]], "#"))
 
             idChange <- min(which(trainPath %in% chg[1]))
-            idSTA <- min(unlist(lapply(lapply(currentBTSinSTA, function(x) trainPath %in% x), which)))
+            idSTA <- unlist(lapply(lapply(currentBTSinSTA, function(x) trainPath %in% x), which))
+            if(length(idSTA) < 1){
+              idSTA <- 10000000
+            }else{
+              idSTA <- min(idSTA)
+            }
+
 
             if(is.infinite(idChange) | is.infinite(idSTA)){
                 x <- unlist(strsplit(data$WAY[ind[j]], "#"))
