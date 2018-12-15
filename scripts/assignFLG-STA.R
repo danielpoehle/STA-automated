@@ -98,7 +98,7 @@ write.csv2(data, file = helper.getResultPath(OUT_FAHRLAGEN_STAFIT_FILEPATH), row
 
 } else { # Checking Block if Overlapping enabled
 
-  data <- read.csv2(file = helper.getResultPath(FAHRLAGEN_STAFIT_FILEPATH), stringsAsFactors = F)
+  data <- read.csv2(file = helper.getResultPath(OUT_FAHRLAGEN_STAFIT_FILEPATH), stringsAsFactors = F)
 
 }
 

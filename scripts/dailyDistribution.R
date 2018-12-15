@@ -90,15 +90,21 @@ for(i in 1:length(staFiles)){
                 }
             }
         }
-        ri <- unlist(strsplit(direction, "#"))[-1]
-        time <- unlist(strsplit(timeStamps, "#"))[-1]
-        if(length(ri) != length(time)){
+        if(length(direction) < 1){
+          #result <- rbind(result, data.frame(SYS = sys[j], TIME = "00:00:00.00#00:00:00.00",
+          #                                   DIRECTION = paste(newSTA[ind], newSTA[-ind], sep = "#"), RELATION = "0#0",
+          #                                   stringsAsFactors = F))
+        }else{
+          ri <- unlist(strsplit(direction, "#"))[-1]
+          time <- unlist(strsplit(timeStamps, "#"))[-1]
+          if(length(ri) != length(time)){
             stop("ba")
             rep("Ri", length(time)- length(ri))
+          }
+          result <- rbind(result, data.frame(SYS = sys[j], TIME = timeStamps,
+                                             DIRECTION = direction, RELATION = relation,
+                                             stringsAsFactors = F))
         }
-        result <- rbind(result, data.frame(SYS = sys[j], TIME = timeStamps,
-                                           DIRECTION = direction, RELATION = relation,
-                                           stringsAsFactors = F))
     }
     write.csv2(result, file = paste0(helper.getResultPath(OPT_FOLDER), "/tagesgang/", staNames[i], ".csv"), row.names = F)
 }
