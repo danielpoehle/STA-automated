@@ -1,5 +1,5 @@
 parameter;value
-RESULT_VERSION;121_reduziert+
+RESULT_VERSION;121_reduziert++
 STAGROUPS_FILEPATH;STAGROUPS_v13.csv
 NUMBER_OF_CORES;7
 OUT_COMP_OPTI;compatibility_v12.csv
@@ -8,9 +8,9 @@ OUT_PRE_OPTI;beginSelected_v12.csv
 OUT_ALL2x90;all2x90_v12.csv
 OUT_POST_OPTI;optimizedSelected_v12.csv
 STAMMDATEN_FILEPATH;2013-Stammdaten_ST-STTriebfahrzeugbaureihen121-komplett.xml
-FAHRLAGEN_FILEPATH;Fahrlagen_14.11.2013_final_v15_reduziert+.csv
+FAHRLAGEN_FILEPATH;Fahrlagen_14.11.2013_final_v16_reduziert++.csv
 FINVEBTS_FILEPATH;FinVeBTS.csv
-WOLKEN_FILEPATH;WolkenBST_v02.csv
+WOLKEN_FILEPATH;WolkenBST_v03.csv
 STA_ROUTES_FOLDER;ERIKA_STA_181205_v13
 STA_MAPPING_FILE;mapping_STAaltneu_v13.csv
 OUT_FAHRLAGEN_STAFIT_FILEPATH;Fahrlagen_14.11.2013_final_v14_STAFIT.csv
